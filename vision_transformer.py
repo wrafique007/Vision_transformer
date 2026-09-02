@@ -4,13 +4,18 @@ import torch.nn as nn
 
 def get_config():
     config = {
+        "lr": 1e-9,
+        "batch_size": 16,
+        "label_smoothing": 0.1,
         "channels": 3,
         "patch_size": 16,
         "embedding_dim": 768,
-        "mlp_size": 3072,
+        "mlp_dim": 3072,
         "num_of_heads": 12,
         "num_of_layers": 12,
-        "num_of_classes": 101
+        "num_of_classes": 101,
+        "epochs": 5,
+        "file_name":"vision_transformer_model_{0}.pt"
     }
 
     return config
