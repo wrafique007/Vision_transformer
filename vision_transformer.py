@@ -2,6 +2,19 @@ import torch
 import torch.nn as nn
 
 
+def get_config():
+    config = {
+        "channels": 3,
+        "patch_size": 16,
+        "embedding_dim": 768,
+        "mlp_size": 3072,
+        "num_of_heads": 12,
+        "num_of_layers": 12,
+        "num_of_classes": 101
+    }
+
+    return config
+
 class Embedding(nn.Module):
     def __init__(self, channels, embedding_dim, patch_size, dropout=0.1):
         super.__init__()
@@ -51,16 +64,16 @@ class Embedding(nn.Module):
 
 
 class MultiHeadSelfAttention(nn.Module):
-    def __init__(self, embed_dim, num_heads):
+    def __init__(self, embedding_dim, num_heads):
         super.__init__()
 
         self.layer_norm = nn.LayerNorm(
-            embed_dim,
+            embedding_dim,
         )
 
         # Dont apply dropout on Multi Head Attention as mentioned in B.1
         self.MultiHeadSelfAttention = nn.MultiheadAttention(
-            embed_dim=embed_dim,
+            embed_dim=embedding_dim,
             num_heads=num_heads,
             batch_first=True,
         )
@@ -74,17 +87,17 @@ class MultiHeadSelfAttention(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, embed_dim, mlp_dim, dropout=0.1):
+    def __init__(self, embedding_dim, mlp_dim, dropout=0.1):
         super.__init__()
 
         self.dropout = nn.Dropout(dropout)
 
         self.layer_norm = nn.LayerNorm(
-            embed_dim,
+            embedding_dim,
         )
 
         self.layer_1 = nn.Linear(
-            in_features=embed_dim,
+            in_features=embedding_dim,
             out_features=mlp_dim,
         )
 
@@ -92,7 +105,7 @@ class MLP(nn.Module):
 
         self.layer_2 = nn.Linear(
             in_features=mlp_dim,
-            out_features=embed_dim,
+            out_features=embedding_dim,
         )
 
 
@@ -112,16 +125,16 @@ class MLP(nn.Module):
 
 
 class ClassificationHead(nn.Module):
-    def __init__(self, embed_dim, number_of_classes):
+    def __init__(self, embedding_dim, num_of_classes):
         super.__init__()
 
         self.layer_norm = nn.LayerNorm(
-            embed_dim,
+            embedding_dim,
         )
 
         self.classification = nn.Linear(
-            in_features=embed_dim,
-            out_features=number_of_classes,
+            in_features=embedding_dim,
+            out_features=num_of_classes,
         )
 
 
@@ -135,16 +148,31 @@ class ClassificationHead(nn.Module):
 
 
 class TransformerEncoderBlock(nn.Module):
-    def __init__(self):
+    def __init__(self, embedding_dim, num_heads, mlp_dim, dropout=0.1):
         super.__init__()
 
-    def forward(self):
-        pass
+        self.MultiHeadSelfAttention = MultiHeadSelfAttention(embedding_dim, num_heads)
+        self.mlp = MLP(embedding_dim, mlp_dim, dropout)
+
+    def forward(self, x):
+        x = self.MultiHeadSelfAttention(x)
+        x = self.mlp(x)
+
+        return x
 
 
 class VisionTransformer(nn.Module):
-    def __init__(self):
+    def __init__(self, num_of_layers, embedding_dim, num_of_classes, encoder: TransformerEncoderBlock, channels, patch_size, dropout=0.1):
         super.__init__()
 
-    def forward(self):
-        pass
+        self.embedding = Embedding(channels, embedding_dim, patch_size, dropout)
+        self.encoders = nn.Sequential(nn.ModuleList([encoder for x in range(num_of_layers)]))
+        self.head = ClassificationHead(embedding_dim, num_of_classes)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        x = self.encoders(x)
+        x = self.head(x)
+
+        return x
+
