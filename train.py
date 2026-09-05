@@ -17,6 +17,7 @@ class FoodDataset(Dataset):
 
         self.dataset= dataset
         self.transforms = transforms.Compose([
+                transforms.Grayscale(num_output_channels=3),
                 transforms.Resize(256), # Resize shorter edge to 256, keep aspect ratio
                 transforms.Resize((224, 224)), # Then crop to 224*224
                 transforms.ToTensor(),
