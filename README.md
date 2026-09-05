@@ -84,7 +84,7 @@ All settings are defined in the `get_config()` function inside `vision_transform
 | `num_of_heads`     | 12       | Number of self‑attention heads              |
 | `num_of_layers`    | 12       | Number of transformer encoder blocks        |
 | `num_of_classes`   | 101      | Output classes (Food‑101)                   |
-| `epochs`           | 1        | Number of training epochs (change as needed)|
+| `epochs`           | 3        | Number of training epochs (change as needed)|
 | `file_name`        | `"vision_transformer_model_{0}.pt"` | Checkpoint filename pattern |
 
 > **Tip**: To train a smaller variant (e.g., ViT‑Tiny), reduce `embedding_dim` (e.g., to 192), `mlp_dim` (768), `num_of_heads` (3), and `num_of_layers` (6). This reduces memory usage and speeds up training.
