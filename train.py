@@ -93,8 +93,8 @@ def train_model():
 
         for inputs, targets in pbar:
             # waleed
-            inputs.to(device)
-            targets.to(device)
+            inputs = inputs.to(device)
+            targets = targets.to(device)
 
             logits = model(inputs)
 
