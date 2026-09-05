@@ -58,6 +58,8 @@ def train_model():
     else:
         device = torch.device("cpu")
 
+    print(f"device is {device}")# waleed
+
     config = get_config()
 
     encoder  = TransformerEncoderBlock(
@@ -74,6 +76,7 @@ def train_model():
         config["channels"],
         config["patch_size"],
     )
+    model.to(device)
     model.train()
 
 
@@ -90,8 +93,8 @@ def train_model():
 
         for inputs, targets in pbar:
             # waleed
-            # inputs = batch["inputs"].to(device)
-            # targets = batch["labels"].to(device)
+            inputs.to(device)
+            targets.to(device)
 
             logits = model(inputs)
 
