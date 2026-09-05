@@ -14,7 +14,7 @@ def get_config():
         "num_of_heads": 12,
         "num_of_layers": 12,
         "num_of_classes": 101,
-        "epochs": 3,
+        "epochs": 2,
         "file_name":"vision_transformer_model_{0}.pt"
     }
 
