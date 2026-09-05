@@ -4,13 +4,50 @@ from vision_transformer import (
     get_config
 )
 
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 from datasets import load_dataset
 from tqdm import tqdm
 
 import torch
 
+class FoodDataset(Dataset):
+    def __init__(self, dataset):
+        super().__init__()
+
+        self.dataset= dataset
+        self.transforms = transforms.Compose([
+                transforms.Resize(256), # Resize shorter edge to 256, keep aspect ratio
+                transforms.Resize((224, 224)), # Then crop to 224*224
+                transforms.ToTensor(),
+            ]
+        )
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, index):
+
+        image = self.dataset[index]["image"]
+        label = self.dataset[index]["label"]
+
+        transformed_image = self.transforms(image)
+
+        return transformed_image, label
+
+
 def get_ds(config):
     ds = load_dataset("ethz/food101")
+
+    train_dataset = FoodDataset(ds["train"])
+    validation_dataset = FoodDataset(ds["validation"])
+
+    train_dataloader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
+    validation_dataloader = DataLoader(validation_dataset, batch_size=config["batch_size"], shuffle=True)
+
+    return train_dataloader, validation_dataloader
+
+
 
 
 
@@ -44,16 +81,18 @@ def train_model():
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"])
     criterion = torch.nn.CrossEntropyLoss(
-        reduction="batchmean",
+        reduction="mean",
         label_smoothing=config["label_smoothing"],
     )
 
     for epoch in range(config["epochs"]):
         pbar = tqdm(train_dataloader, desc=f"Epochs {epoch}/{config["epochs"]}")
 
-        for batch in pbar:
-            inputs = batch["inputs"].to(device)
-            targets = batch["labels"].to(device)
+        for inputs, targets in pbar:
+            # waleed
+            # inputs = batch["inputs"].to(device)
+            # targets = batch["labels"].to(device)
+
             logits = model(inputs)
 
             loss = criterion(logits, targets)
@@ -69,4 +108,5 @@ def train_model():
 
 
 if __name__ == "__main__":
+    config = get_config()
     train_model()

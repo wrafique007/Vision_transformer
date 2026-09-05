@@ -14,15 +14,15 @@ def get_config():
         "num_of_heads": 12,
         "num_of_layers": 12,
         "num_of_classes": 101,
-        "epochs": 5,
+        "epochs": 1,
         "file_name":"vision_transformer_model_{0}.pt"
     }
 
     return config
 
 class Embedding(nn.Module):
-    def __init__(self, channels, embedding_dim, patch_size, dropout=0.1):
-        super.__init__()
+    def __init__(self, channels, embedding_dim, patch_size, dropout=0.1, batch_size=16, number_of_patches=196):
+        super().__init__()
 
         self.dropout = nn.Dropout(dropout)
 
@@ -36,11 +36,12 @@ class Embedding(nn.Module):
         )
 
         # Output Shape --> (batch_size, embedding_dim, 14*14)
-        self.flatten = nn.Flatten(start_dim=2, end_dim=3)
+        # waleed self.flatten = nn.Flatten(start_dim=2, end_dim=3)
 
-        batch_size = self.flatten.shape[0]
-        embedding_dim = self.flatten.shape[1]
-        number_of_patches = self.flatten.shape[2]
+        # waleed
+        # batch_size = self.flatten.shape[0]
+        # embedding_dim = self.flatten.shape[1]
+        # number_of_patches = self.flatten.shape[2]
 
         # Output Shape --> (batch_size, 1, embedding_dim)
         self.class_token = nn.Parameter(torch.ones(batch_size, 1, embedding_dim))
@@ -52,7 +53,9 @@ class Embedding(nn.Module):
         # Output Shape --> (batch_size, embedding_dim, H, W)
         x = self.patch_embedding(x)
         # Output Shape --> (batch_size, embedding_dim, 14*14 or H*W)
-        x = self.flatten(x)
+        # waleed x = self.flatten(x)
+        # Output Shape --> (batch_size, embedding_dim, 14*14)
+        x = torch.flatten(x, start_dim=2, end_dim=3)
         # Output Shape --> (batch_size, 14*14 or H*W, embedding_dim)
         x = x.permute(0, 2, 1)
 
@@ -70,7 +73,7 @@ class Embedding(nn.Module):
 
 class MultiHeadSelfAttention(nn.Module):
     def __init__(self, embedding_dim, num_heads):
-        super.__init__()
+        super().__init__()
 
         self.layer_norm = nn.LayerNorm(
             embedding_dim,
@@ -85,15 +88,17 @@ class MultiHeadSelfAttention(nn.Module):
 
 
     def forward(self, x):
+        q = self.layer_norm(x)
+        attn_output, attn_output_weights = self.MultiHeadSelfAttention(q, q, q)
         # Apply Residual connection
-        x = x + self.MultiHeadSelfAttention(self.layer_norm(x))
+        x = x + attn_output
 
         return x
 
 
 class MLP(nn.Module):
     def __init__(self, embedding_dim, mlp_dim, dropout=0.1):
-        super.__init__()
+        super().__init__()
 
         self.dropout = nn.Dropout(dropout)
 
@@ -131,7 +136,7 @@ class MLP(nn.Module):
 
 class ClassificationHead(nn.Module):
     def __init__(self, embedding_dim, num_of_classes):
-        super.__init__()
+        super().__init__()
 
         self.layer_norm = nn.LayerNorm(
             embedding_dim,
@@ -154,7 +159,7 @@ class ClassificationHead(nn.Module):
 
 class TransformerEncoderBlock(nn.Module):
     def __init__(self, embedding_dim, num_heads, mlp_dim, dropout=0.1):
-        super.__init__()
+        super().__init__()
 
         self.MultiHeadSelfAttention = MultiHeadSelfAttention(embedding_dim, num_heads)
         self.mlp = MLP(embedding_dim, mlp_dim, dropout)
@@ -168,15 +173,16 @@ class TransformerEncoderBlock(nn.Module):
 
 class VisionTransformer(nn.Module):
     def __init__(self, num_of_layers, embedding_dim, num_of_classes, encoder: TransformerEncoderBlock, channels, patch_size, dropout=0.1):
-        super.__init__()
+        super().__init__()
 
         self.embedding = Embedding(channels, embedding_dim, patch_size, dropout)
-        self.encoders = nn.Sequential(nn.ModuleList([encoder for x in range(num_of_layers)]))
+        self.encoders = [encoder for x in range(num_of_layers)]
         self.head = ClassificationHead(embedding_dim, num_of_classes)
 
     def forward(self, x):
         x = self.embedding(x)
-        x = self.encoders(x)
+        for encoder in self.encoders:
+            x = encoder(x)
         x = self.head(x)
 
         return x
