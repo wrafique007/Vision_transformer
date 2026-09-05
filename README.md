@@ -4,8 +4,8 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.9+-red.svg)](https://pytorch.org/)
 [![arXiv](https://img.shields.io/badge/arXiv-2010.11929-b31b1b.svg)](https://arxiv.org/abs/2010.11929)
 
-A complete, from‑scratch PyTorch implementation of the **Vision Transformer (ViT)** as described in the paper  
-**[An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/pdf/2010.11929)**  
+A complete, from‑scratch PyTorch implementation of the **Vision Transformer (ViT)** as described in the paper
+**[An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/pdf/2010.11929)**
 by Dosovitskiy et al. (Google Research, 2020).
 
 This repository provides a clean, modular, and configurable ViT model, along with a ready‑to‑use training pipeline on the **Food‑101** dataset. It is designed for educational understanding, quick experimentation, and as a foundation for custom vision‑transformer projects.
@@ -19,13 +19,13 @@ This repository provides a clean, modular, and configurable ViT model, along wit
    - [Patch Embedding](#patch-embedding)
    - [Class Token & Positional Embedding](#class-token--positional-embedding)
    - [Transformer Encoder](#transformer-encoder)
-   - [MultiHead Self‑Attention](#multihead-self-attention)
+   - [Multi‑Head Self‑Attention](#multi-head-self-attention)
    - [MLP Block](#mlp-block)
    - [Classification Head](#classification-head)
 3. [Configuration & Hyperparameters](#configuration--hyperparameters)
 4. [Dataset](#dataset)
 5. [Installation](#installation)
-8. [Project Structure](#project-structure)
+6. [Project Structure](#project-structure)
 
 ---
 
@@ -44,7 +44,6 @@ This repository provides a clean, modular, and configurable ViT model, along wit
 
 The model follows the original ViT design, summarised below.
 
-
 ### Patch Embedding
 Images are split into non‑overlapping patches of size `patch_size × patch_size` (e.g., 16×16). A convolutional layer with kernel and stride equal to `patch_size` projects each patch to an embedding vector of dimension `embedding_dim` (768 in the base model). This produces a sequence of `N = (H/patch_size) × (W/patch_size)` patch embeddings.
 
@@ -54,7 +53,7 @@ A learnable `[class]` token is prepended to the patch sequence; its final repres
 ### Transformer Encoder
 The encoder comprises `num_of_layers` identical blocks. Each block applies **pre‑layer normalisation** (before both attention and MLP), a residual connection after each sub‑layer, and uses GELU activation in the MLP.
 
-### MultiHead Self‑Attention
+### Multi‑Head Self‑Attention
 The implementation:
 - Splits the input into `num_of_heads` heads.
 - Computes scaled dot‑product attention: `Attention(Q,K,V) = softmax(QKᵀ / √d_k) V`.
@@ -114,11 +113,14 @@ The dataset is loaded via Hugging Face’s `datasets` library with the `"food101
 
 ## Project Structure
 
-Vision_transformer/
-├── __init__.py                     # Makes the directory a package
-├── vision_transformer.py           # Core model: PatchEmbedding, MHSA, MLPBlock,
-│                                   # TransformerBlock, ViT, and get_config()
-├── train.py                        # Training script: loads Food‑101, runs training
-│                                   # loop, saves checkpoints
-├── requirements.txt                # Python dependencies
-└── README.md                       # This document
+```
+Vision_transformer
+├── init.py # Makes the directory a package
+├── vision_transformer.py # Core model: PatchEmbedding, MHSA, MLPBlock,
+│ # TransformerBlock, ViT, and get_config()
+├── train.py # Training script: loads Food-101, runs training
+│ # loop, and saves checkpoints
+├── requirements.txt # Python dependencies
+└── README.md # This document
+```
+
