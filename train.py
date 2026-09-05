@@ -62,17 +62,19 @@ def train_model():
 
     config = get_config()
 
-    encoder  = TransformerEncoderBlock(
-        config["embedding_dim"],
-        config["num_of_heads"],
-        config["mlp_dim"],
-    )
+    # waleed
+    # encoder  = TransformerEncoderBlock(
+    #     config["embedding_dim"],
+    #     config["num_of_heads"],
+    #     config["mlp_dim"],
+    # )
 
     model = VisionTransformer(
         config["num_of_layers"],
         config["embedding_dim"],
+        config["num_of_heads"],
+        config["mlp_dim"],
         config["num_of_classes"],
-        encoder,
         config["channels"],
         config["patch_size"],
     )
@@ -104,7 +106,7 @@ def train_model():
             loss.backward()
             optimizer.step()
 
-            pbar.set_postfix({"loss": loss})
+            pbar.set_postfix({"loss": loss.item()})
 
 
         torch.save(model.state_dict(), config["file_name"].format(epoch))

@@ -43,10 +43,10 @@ class Embedding(nn.Module):
         # embedding_dim = self.flatten.shape[1]
         # number_of_patches = self.flatten.shape[2]
 
-        # Output Shape --> (batch_size, 1, embedding_dim)
-        self.class_token = nn.Parameter(torch.ones(batch_size, 1, embedding_dim))
+        # Output Shape --> (1, 1, embedding_dim), dont use batch_size as last batch may not be batch_size
+        self.class_token = nn.Parameter(torch.ones(1, 1, embedding_dim))
 
-        self.position_embedding = nn.Parameter(torch.ones(batch_size, 1+number_of_patches, embedding_dim))
+        self.position_embedding = nn.Parameter(torch.ones(1, 1+number_of_patches, embedding_dim))
 
 
     def forward(self, x):
@@ -59,11 +59,13 @@ class Embedding(nn.Module):
         # Output Shape --> (batch_size, 14*14 or H*W, embedding_dim)
         x = x.permute(0, 2, 1)
 
+        class_token = self.class_token.expand(x.size(0), -1, -1) # batch_size, 1, embedding_dim
         # Add the class token to patch embedding
-        x = torch.cat([self.class_token, x], dim=1)
+        x = torch.cat([class_token, x], dim=1) # batch_size, 1+number_of_patches, embedding_dim
 
-        # Add positional embedding, Output Shape --> (batch_size, (14*14 or H*W)+1, embedding_dim)
-        x = x + self.position_embedding
+        position_embedding = self.position_embedding.expand(x.size(0), -1, -1) # (batch_size, 1+number_of_patches, embedding_dim)
+        # Add positional embedding, Output Shape --> (batch_size, 1+number_of_patches, embedding_dim)
+        x = x + position_embedding
 
         # Add dropout as mentioned in B.1
         x = self.dropout(x)
@@ -172,11 +174,14 @@ class TransformerEncoderBlock(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    def __init__(self, num_of_layers, embedding_dim, num_of_classes, encoder: TransformerEncoderBlock, channels, patch_size, dropout=0.1):
+    def __init__(self, num_of_layers, embedding_dim, num_heads, mlp_dim, num_of_classes, channels, patch_size, dropout=0.1):
         super().__init__()
 
         self.embedding = Embedding(channels, embedding_dim, patch_size, dropout)
-        self.encoders = [encoder for x in range(num_of_layers)]
+        # waleed self.encoders = [encoder for x in range(num_of_layers)]
+        self.encoders = nn.ModuleList([
+            TransformerEncoderBlock(embedding_dim, num_heads, mlp_dim, dropout) for _ in range(num_of_layers)
+        ])
         self.head = ClassificationHead(embedding_dim, num_of_classes)
 
     def forward(self, x):
