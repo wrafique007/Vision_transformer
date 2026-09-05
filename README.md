@@ -19,22 +19,13 @@ This repository provides a clean, modular, and configurable ViT model, along wit
    - [Patch Embedding](#patch-embedding)
    - [Class Token & Positional Embedding](#class-token--positional-embedding)
    - [Transformer Encoder](#transformer-encoder)
-   - [Multi‑Head Self‑Attention (MHSA)](#multihead-self-attention-mhsa)
+   - [MultiHead Self‑Attention](#multihead-self-attention)
    - [MLP Block](#mlp-block)
    - [Classification Head](#classification-head)
 3. [Configuration & Hyperparameters](#configuration--hyperparameters)
 4. [Dataset](#dataset)
 5. [Installation](#installation)
-6. [Training](#training)
-   - [Command‑Line Usage](#commandline-usage)
-   - [Training Progress & Checkpoints](#training-progress--checkpoints)
-7. [Inference](#inference)
-   - [Loading a Saved Model](#loading-a-saved-model)
-   - [Single‑Image Prediction](#singleimage-prediction)
 8. [Project Structure](#project-structure)
-9. [Future Improvements](#future-improvements)
-10. [References](#references)
-11. [License](#license)
 
 ---
 
@@ -63,7 +54,7 @@ A learnable `[class]` token is prepended to the patch sequence; its final repres
 ### Transformer Encoder
 The encoder comprises `num_of_layers` identical blocks. Each block applies **pre‑layer normalisation** (before both attention and MLP), a residual connection after each sub‑layer, and uses GELU activation in the MLP.
 
-### Multi‑Head Self‑Attention (MHSA)
+### MultiHead Self‑Attention
 The implementation:
 - Splits the input into `num_of_heads` heads.
 - Computes scaled dot‑product attention: `Attention(Q,K,V) = softmax(QKᵀ / √d_k) V`.
