@@ -52,3 +52,82 @@ This repository provides a clean, modular, and configurable ViT model, along wit
 ## Architecture Overview
 
 The model follows the original ViT design, summarised below.
+
+
+### Patch Embedding
+Images are split into non‑overlapping patches of size `patch_size × patch_size` (e.g., 16×16). A convolutional layer with kernel and stride equal to `patch_size` projects each patch to an embedding vector of dimension `embedding_dim` (768 in the base model). This produces a sequence of `N = (H/patch_size) × (W/patch_size)` patch embeddings.
+
+### Class Token & Positional Embedding
+A learnable `[class]` token is prepended to the patch sequence; its final representation serves as the image‑level feature for classification. Learnable positional embeddings are added to the entire sequence to retain spatial information, followed by a dropout layer.
+
+### Transformer Encoder
+The encoder comprises `num_of_layers` identical blocks. Each block applies **pre‑layer normalisation** (before both attention and MLP), a residual connection after each sub‑layer, and uses GELU activation in the MLP.
+
+### Multi‑Head Self‑Attention (MHSA)
+The implementation:
+- Splits the input into `num_of_heads` heads.
+- Computes scaled dot‑product attention: `Attention(Q,K,V) = softmax(QKᵀ / √d_k) V`.
+- Concatenates heads and projects back to `embedding_dim`.
+- Includes dropout for attention weights and the output projection.
+
+### MLP Block
+A two‑layer feed‑forward network with an expansion factor (typically 4× the embedding dimension). The first layer expands to `mlp_dim`, applies GELU, then a second layer projects back to `embedding_dim`. Dropout is applied after each linear layer.
+
+### Classification Head
+The final representation of the `[class]` token is extracted, passed through a LayerNorm, and fed into a single linear layer to produce logits for `num_of_classes`.
+
+---
+
+## Configuration & Hyperparameters
+
+All settings are defined in the `get_config()` function inside `vision_transformer.py`:
+
+| Parameter          | Default  | Description                                 |
+|--------------------|----------|---------------------------------------------|
+| `lr`               | 1e-9     | Learning rate (conservative for stability)  |
+| `batch_size`       | 16       | Number of images per batch                  |
+| `label_smoothing`  | 0.1      | Label smoothing factor for cross‑entropy   |
+| `channels`         | 3        | Input image channels (RGB)                  |
+| `patch_size`       | 16       | Patch size (e.g., 16×16)                    |
+| `embedding_dim`    | 768      | Transformer hidden dimension (D)            |
+| `mlp_dim`          | 3072     | MLP hidden dimension (4×D)                  |
+| `num_of_heads`     | 12       | Number of self‑attention heads              |
+| `num_of_layers`    | 12       | Number of transformer encoder blocks        |
+| `num_of_classes`   | 101      | Output classes (Food‑101)                   |
+| `epochs`           | 1        | Number of training epochs (change as needed)|
+| `file_name`        | `"vision_transformer_model_{0}.pt"` | Checkpoint filename pattern |
+
+> **Tip**: To train a smaller variant (e.g., ViT‑Tiny), reduce `embedding_dim` (e.g., to 192), `mlp_dim` (768), `num_of_heads` (3), and `num_of_layers` (6). This reduces memory usage and speeds up training.
+
+---
+
+## Dataset
+
+The training script uses the **[Food‑101](https://huggingface.co/datasets/ethz/food101)** dataset, which contains 101 food categories (e.g., pizza, sushi, steak) with 750 training and 250 test images per class.
+
+**Preprocessing**:
+- Resize images to 256 pixels on the shorter edge.
+- Center crop to 224×224 (standard for ViT).
+- Convert to a PyTorch tensor (values are automatically scaled to [0,1] by `ToTensor`).
+
+The dataset is loaded via Hugging Face’s `datasets` library with the `"food101"` configuration. The training split is used for training.
+
+---
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/wrafique007/Vision_transformer.git
+   cd Vision_transformer
+
+## Project Structure
+
+Vision_transformer/
+├── __init__.py                     # Makes the directory a package
+├── vision_transformer.py           # Core model: PatchEmbedding, MHSA, MLPBlock,
+│                                   # TransformerBlock, ViT, and get_config()
+├── train.py                        # Training script: loads Food‑101, runs training
+│                                   # loop, saves checkpoints
+├── requirements.txt                # Python dependencies
+└── README.md                       # This document
